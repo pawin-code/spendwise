@@ -30,28 +30,58 @@ class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(18),
     this.onTap,
     this.color,
+    this.gradient,
   });
   final Widget child;
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
   final Color? color;
+  final Gradient? gradient;
 
   @override
   Widget build(BuildContext context) {
-    final card = Card(
-      color: color,
-      clipBehavior: Clip.antiAlias,
-      child: onTap == null
-          ? Padding(padding: padding, child: child)
-          : InkWell(
-              onTap: onTap,
-              child: Padding(padding: padding, child: child),
-            ),
+    final fin = context.finance;
+    final theme = Theme.of(context);
+    final radius = BorderRadius.circular(Gap.radius);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: [
+          BoxShadow(
+            color: fin.cardShadow,
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: fin.cardShadow.withValues(alpha: 0.04),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Material(
+        color: gradient == null ? (color ?? theme.cardTheme.color) : null,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius,
+          side: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Ink(
+          decoration: gradient == null
+              ? null
+              : BoxDecoration(gradient: gradient),
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(padding: padding, child: child),
+          ),
+        ),
+      ),
     );
-    return card;
   }
 }
 
@@ -64,14 +94,22 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+      padding: const EdgeInsets.fromLTRB(6, 26, 2, 10),
       child: Row(
         children: [
           Expanded(
-            child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontSize: 18),
+            ),
           ),
           if (actionLabel != null)
-            TextButton(onPressed: onAction, child: Text(actionLabel!)),
+            TextButton(
+              onPressed: onAction,
+              style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+              child: Text(actionLabel!),
+            ),
         ],
       ),
     );
@@ -98,26 +136,43 @@ class EmptyState extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Layered halo: soft outer ring, tinted disc, gradient icon.
             Container(
-              width: 72,
-              height: 72,
+              width: 112,
+              height: 112,
               decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
+                color: scheme.primary.withValues(alpha: 0.06),
               ),
-              child: Icon(icon, size: 34, color: scheme.primary),
+              alignment: Alignment.center,
+              child: Container(
+                width: 84,
+                height: 84,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      scheme.primary.withValues(alpha: 0.20),
+                      scheme.primary.withValues(alpha: 0.08),
+                    ],
+                  ),
+                ),
+                child: Icon(icon, size: 36, color: scheme.primary),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
               title,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               message,
               style: Theme.of(context).textTheme.bodyMedium
@@ -125,7 +180,7 @@ class EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 22),
               FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
@@ -320,44 +375,68 @@ class MonthSwitcher extends ConsumerWidget {
     final month = ref.watch(selectedMonthProvider);
     final notifier = ref.read(selectedMonthProvider.notifier);
     final isCurrent = isSameMonth(month, DateTime.now());
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          tooltip: 'Previous month',
-          onPressed: () => notifier.shift(-1),
-          icon: const Icon(Icons.chevron_left),
-        ),
-        Flexible(
-          child: InkWell(
-            borderRadius: BorderRadius.circular(8),
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: month,
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2100),
-                helpText: 'Pick any day in the month',
-              );
-              if (picked != null) notifier.set(picked);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-              child: Text(
-                isCurrent ? 'This month' : formatMonth(month),
-                style: Theme.of(context).textTheme.titleSmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(40),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Previous month',
+            visualDensity: VisualDensity.compact,
+            onPressed: () => notifier.shift(-1),
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Flexible(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: month,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                  helpText: 'Pick any day in the month',
+                );
+                if (picked != null) notifier.set(picked);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.calendar_month_outlined,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        isCurrent ? 'This month' : formatMonth(month),
+                        style: theme.textTheme.titleSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        IconButton(
-          tooltip: 'Next month',
-          onPressed: () => notifier.shift(1),
-          icon: const Icon(Icons.chevron_right),
-        ),
-      ],
+          IconButton(
+            tooltip: 'Next month',
+            visualDensity: VisualDensity.compact,
+            onPressed: () => notifier.shift(1),
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -404,13 +483,14 @@ class AmountKeypad extends StatelessWidget {
       '0',
       'back',
     ];
+    final theme = Theme.of(context);
     return GridView.count(
       crossAxisCount: 3,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 2.2,
-      mainAxisSpacing: 6,
-      crossAxisSpacing: 6,
+      childAspectRatio: 2.3,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
       children: [
         for (final k in keys)
           Semantics(
@@ -419,20 +499,29 @@ class AmountKeypad extends StatelessWidget {
                 ? 'Backspace'
                 : (k == '.' ? 'Decimal point' : 'Digit $k'),
             child: Material(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(14),
+              color: k == 'back'
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.6)
+                  : theme.cardTheme.color,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+                side: BorderSide(color: theme.colorScheme.outlineVariant),
+              ),
               child: InkWell(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(18),
                 onTap: () => onKey(k),
                 onLongPress: k == 'back' ? onClear : null,
                 child: Center(
                   child: k == 'back'
-                      ? const Icon(Icons.backspace_outlined)
+                      ? Icon(
+                          Icons.backspace_outlined,
+                          color: theme.colorScheme.primary,
+                        )
                       : Text(
                           k,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                 ),
               ),

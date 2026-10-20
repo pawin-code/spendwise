@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:spendwise/app/providers.dart';
 import 'package:spendwise/app/router.dart';
+import 'package:spendwise/app/theme.dart';
 import 'package:spendwise/core/dates.dart';
 import 'package:spendwise/core/money.dart';
 import 'package:spendwise/core/widgets/brand_mark.dart';
@@ -191,23 +192,85 @@ class _InfoPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          minHeight: MediaQuery.sizeOf(context).height * 0.55,
+          minHeight: MediaQuery.sizeOf(context).height * 0.72,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const BrandMark(size: 72),
-            const SizedBox(height: 32),
+            // Branded hero panel: gradient, soft orbs, app mark and the page glyph.
             Container(
-              width: 84,
-              height: 84,
+              width: double.infinity,
+              height: 230,
               decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(36),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: context.finance.heroGradient,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.finance.heroGradient.last.withValues(
+                      alpha: 0.3,
+                    ),
+                    blurRadius: 28,
+                    offset: const Offset(0, 14),
+                  ),
+                ],
               ),
-              child: Icon(page.icon, size: 40, color: scheme.primary),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(36),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned(
+                      right: -40,
+                      top: -50,
+                      child: Container(
+                        width: 170,
+                        height: 170,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.07),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: -30,
+                      bottom: -60,
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Brand.emeraldMint.withValues(alpha: 0.10),
+                        ),
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const BrandMark(size: 64),
+                        const SizedBox(height: 18),
+                        Container(
+                          width: 76,
+                          height: 76,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.14),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.18),
+                            ),
+                          ),
+                          child: Icon(page.icon, size: 36, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
               page.title,
               style: Theme.of(context).textTheme.headlineSmall

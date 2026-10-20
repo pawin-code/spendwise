@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:spendwise/app/providers.dart';
 import 'package:spendwise/app/router.dart';
+import 'package:spendwise/core/money.dart';
+import 'package:spendwise/app/theme.dart';
 import 'package:spendwise/core/dates.dart';
 import 'package:spendwise/core/widgets/common.dart';
 import 'package:spendwise/data/repositories/transaction_repository.dart';
@@ -222,51 +224,111 @@ class _GroupedList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final children = <Widget>[];
-    DateTime? lastDay;
+    final theme = Theme.of(context);
+    final cur = ref.watch(currencyProvider);
+    final fin = context.finance;
+    // Preserve order; start a new card whenever the day changes.
+    final groups = <(DateTime?, List<TxnView>)>[];
     for (final v in items) {
-      final day = dateOnly(v.txn.occurredAt);
-      if (groupByDate && (lastDay == null || lastDay != day)) {
+      final day = groupByDate ? dateOnly(v.txn.occurredAt) : null;
+      if (groups.isEmpty || groups.last.$1 != day) {
+        groups.add((day, <TxnView>[]));
+      }
+      groups.last.$2.add(v);
+    }
+    Widget row(TxnView v) => Dismissible(
+      key: ValueKey('dismiss-${v.txn.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 22),
+        color: theme.colorScheme.errorContainer,
+        child: Icon(
+          Icons.delete_outline,
+          color: theme.colorScheme.onErrorContainer,
+        ),
+      ),
+      confirmDismiss: (_) => confirmDialog(
+        context,
+        title: 'Delete transaction?',
+        message: 'It moves to Recently deleted for 30 days, where you can restore it.',
+        confirmLabel: 'Delete',
+        destructive: true,
+      ),
+      onDismissed: (_) => deleteWithUndo(context, ref, v.txn.id),
+      child: TransactionTile(view: v, includeDate: !groupByDate),
+    );
+    final children = <Widget>[];
+    for (final g in groups) {
+      if (g.$1 != null) {
+        var net = 0;
+        for (final v in g.$2) {
+          if (v.txn.type == TxnType.income) net += v.txn.amountMinor;
+          if (v.txn.type == TxnType.expense) net -= v.txn.amountMinor;
+        }
         children.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 16, 4, 4),
-            child: Text(
-              friendlyDay(day),
-              style: Theme.of(context).textTheme.labelLarge
-                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
+            padding: const EdgeInsets.fromLTRB(8, 22, 8, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    friendlyDay(g.$1!),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+                if (net != 0)
+                  Text(
+                    formatMinor(
+                      net,
+                      currency: cur,
+                      signed: true,
+                      hideZeroFraction: true,
+                    ),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: net > 0
+                          ? fin.income
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
             ),
           ),
         );
-        lastDay = day;
+      } else if (children.isEmpty) {
+        children.add(const SizedBox(height: 8));
       }
       children.add(
-        Dismissible(
-          key: ValueKey('dismiss-${v.txn.id}'),
-          direction: DismissDirection.endToStart,
-          background: Container(
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-            color: Theme.of(context).colorScheme.errorContainer,
-            child: Icon(
-              Icons.delete_outline,
-              color: Theme.of(context).colorScheme.onErrorContainer,
+        AppCard(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Column(
+              children: [
+                for (var i = 0; i < g.$2.length; i++) ...[
+                  if (i > 0)
+                    Divider(
+                      height: 1,
+                      indent: 76,
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.7,
+                      ),
+                    ),
+                  row(g.$2[i]),
+                ],
+              ],
             ),
           ),
-          confirmDismiss: (_) => confirmDialog(
-            context,
-            title: 'Delete transaction?',
-            message: 'It moves to Recently deleted for 30 days, where you can restore it.',
-            confirmLabel: 'Delete',
-            destructive: true,
-          ),
-          onDismissed: (_) => deleteWithUndo(context, ref, v.txn.id),
-          child: TransactionTile(view: v, includeDate: !groupByDate),
         ),
       );
     }
     return ListView(
       controller: controller,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 112),
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 120),
       children: children,
     );
   }

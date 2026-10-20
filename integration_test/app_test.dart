@@ -104,7 +104,7 @@ void main() {
       expect(find.text('Welcome to SpendWise'), findsOneWidget);
 
       // 3. Add income of 50,000.
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Income'));
+      await tester.tap(find.byKey(const Key('quick-income')));
       await settle(tester);
       await typeAmount(tester, '50000');
       await tester.tap(find.widgetWithText(ChoiceChip, 'Salary'));

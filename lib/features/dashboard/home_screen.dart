@@ -62,11 +62,11 @@ class _HomeBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final count = ref.watch(transactionCountProvider);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 112),
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 120),
       children: [
         const Align(alignment: Alignment.centerLeft, child: MonthSwitcher()),
         const _BalanceCard(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         const _QuickActions(),
         if (count.value == 0) ...[
           const SizedBox(height: 16),
@@ -107,87 +107,141 @@ class _BalanceCard extends ConsumerWidget {
     final overall = progress.value
         ?.where((p) => p.budget.categoryId == null)
         .firstOrNull;
-    const onNavy = Colors.white;
-    return Container(
-      padding: const EdgeInsets.all(20),
+    const onHero = Colors.white;
+    final fin = context.finance;
+    return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [Brand.navy, Color(0xFF0F3B3A), Brand.emerald],
+        borderRadius: BorderRadius.circular(32),
+        gradient: LinearGradient(
+          colors: fin.heroGradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Current balance',
-            style: Theme.of(context).textTheme.labelLarge
-                ?.copyWith(color: onNavy.withValues(alpha: 0.8)),
-          ),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: MoneyText(
-              total,
-              color: onNavy,
-              style: Theme.of(context).textTheme.displaySmall
-                  ?.copyWith(fontWeight: FontWeight.w800),
-            ),
-          ),
-          Text(
-            'From your recorded wallets · ${formatMonth(month)}',
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: onNavy.withValues(alpha: 0.7)),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _MiniStat(
-                  label: 'Income',
-                  minor: s.incomeMinor,
-                  icon: Icons.south_west,
-                  color: const Color(0xFF6EE7B7),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _MiniStat(
-                  label: 'Expenses',
-                  minor: s.expenseMinor,
-                  icon: Icons.north_east,
-                  color: const Color(0xFFFCA5A5),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _MiniStat(
-                  label: overall == null ? 'Budget left' : 'Budget left',
-                  minor: overall?.remainingMinor ?? 0,
-                  icon: Icons.pie_chart_outline,
-                  color: onNavy,
-                  emptyText: overall == null ? 'No budget' : null,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _MiniStat(
-                  label: 'Scheduled ahead',
-                  minor: (extras.value?.futureExpenseMinor ?? 0),
-                  icon: Icons.event_outlined,
-                  color: onNavy,
-                ),
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: fin.heroGradient.last.withValues(alpha: 0.35),
+            blurRadius: 32,
+            offset: const Offset(0, 16),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -50,
+              top: -60,
+              child: Container(
+                width: 190,
+                height: 190,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+            Positioned(
+              left: -40,
+              bottom: -70,
+              child: Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Brand.emeraldMint.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.account_balance_wallet_outlined,
+                          size: 18,
+                          color: onHero,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          'Current balance',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: onHero.withValues(alpha: 0.82),
+                                letterSpacing: 0.3,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: MoneyText(
+                      total,
+                      color: onHero,
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        fontSize: 42,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1.2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'From your recorded wallets · ${formatMonth(month)}',
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: onHero.withValues(alpha: 0.7)),
+                  ),
+                  const SizedBox(height: 20),
+                  _StatsGrid(
+                    children: [
+                      _MiniStat(
+                        label: 'Income',
+                        minor: s.incomeMinor,
+                        icon: Icons.south_west_rounded,
+                        color: Brand.emeraldMint,
+                      ),
+                      _MiniStat(
+                        label: 'Expenses',
+                        minor: s.expenseMinor,
+                        icon: Icons.north_east_rounded,
+                        color: const Color(0xFFFF9AA3),
+                      ),
+                      _MiniStat(
+                        label: 'Budget left',
+                        minor: overall?.remainingMinor ?? 0,
+                        icon: Icons.donut_large_rounded,
+                        color: onHero,
+                        emptyText: overall == null ? 'No budget' : null,
+                      ),
+                      _MiniStat(
+                        label: 'Scheduled ahead',
+                        minor: extras.value?.futureExpenseMinor ?? 0,
+                        icon: Icons.event_outlined,
+                        color: onHero,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -210,15 +264,16 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 8),
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,8 +281,9 @@ class _MiniStat extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.labelSmall
-                      ?.copyWith(color: Colors.white.withValues(alpha: 0.75)),
+                      ?.copyWith(color: Colors.white.withValues(alpha: 0.72)),
                 ),
+                const SizedBox(height: 2),
                 if (emptyText != null)
                   Text(
                     emptyText!,
@@ -243,7 +299,7 @@ class _MiniStat extends StatelessWidget {
                       color: Colors.white,
                       hideZeroFraction: true,
                       style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                          ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                   ),
               ],
@@ -260,34 +316,66 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget action(String label, IconData icon, String route, {Color? color}) =>
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => context.push(route),
-            icon: Icon(icon, color: color),
-            label: Text(label),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+    final fin = context.finance;
+    Widget tile(
+      String key,
+      String label,
+      IconData icon,
+      String route,
+      Color tint,
+    ) => Expanded(
+      child: AppCard(
+        key: Key(key),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        onTap: () => context.push(route),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: tint.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: tint),
             ),
-          ),
-        );
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelLarge,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
     return Row(
       children: [
-        action(
+        tile(
+          'quick-income',
           'Income',
-          Icons.add_circle_outline,
+          Icons.south_west_rounded,
           '${Routes.add}?type=income',
-          color: context.finance.income,
+          fin.income,
         ),
-        const SizedBox(width: 8),
-        action(
+        const SizedBox(width: 12),
+        tile(
+          'quick-expense',
           'Expense',
-          Icons.remove_circle_outline,
+          Icons.north_east_rounded,
           '${Routes.add}?type=expense',
-          color: context.finance.expense,
+          fin.expense,
         ),
-        const SizedBox(width: 8),
-        action('Transfer', Icons.swap_horiz, '${Routes.add}?type=transfer'),
+        const SizedBox(width: 12),
+        tile(
+          'quick-transfer',
+          'Transfer',
+          Icons.swap_horiz_rounded,
+          '${Routes.add}?type=transfer',
+          Theme.of(context).colorScheme.secondary,
+        ),
       ],
     );
   }
@@ -301,6 +389,14 @@ class _SafeToSpendCard extends ConsumerWidget {
     final safe = ref.watch(safeToSpendProvider);
     final scheme = Theme.of(context).colorScheme;
     return AppCard(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          scheme.primary.withValues(alpha: 0.10),
+          Theme.of(context).cardTheme.color ?? scheme.surface,
+        ],
+      ),
       child: safe.when(
         loading: () => const SizedBox(
           height: 60,
@@ -594,6 +690,44 @@ class _RecentSection extends ConsumerWidget {
                     children: [for (final v in list) TransactionTile(view: v)],
                   ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Two columns normally; a single column when text is scaled up so figures never clip.
+class _StatsGrid extends StatelessWidget {
+  const _StatsGrid({required this.children});
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final big = MediaQuery.textScalerOf(context).scale(14) / 14 > 1.25;
+    if (big) {
+      return Column(
+        children: [
+          for (final c in children)
+            Padding(padding: const EdgeInsets.only(bottom: 10), child: c),
+        ],
+      );
+    }
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: children[0]),
+            const SizedBox(width: 10),
+            Expanded(child: children[1]),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(child: children[2]),
+            const SizedBox(width: 10),
+            Expanded(child: children[3]),
+          ],
         ),
       ],
     );

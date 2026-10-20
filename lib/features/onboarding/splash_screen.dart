@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:spendwise/app/providers.dart';
 import 'package:spendwise/app/router.dart';
+import 'package:spendwise/app/theme.dart';
 import 'package:spendwise/core/widgets/brand_mark.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -37,25 +38,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final fin = context.finance;
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const BrandMark(size: 104),
-            const SizedBox(height: 20),
-            Text(
-              'SpendWise',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Know Your Money. Own Your Future.',
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ],
+      body: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: fin.heroGradient,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const BrandMark(size: 112),
+              const SizedBox(height: 24),
+              Text(
+                'SpendWise',
+                style: Theme.of(context).textTheme.headlineMedium
+                    ?.copyWith(color: Colors.white, fontSize: 34),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Know Your Money. Own Your Future.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.78),
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

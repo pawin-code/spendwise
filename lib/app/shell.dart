@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:spendwise/app/router.dart';
+import 'package:spendwise/app/theme.dart';
 
 /// Bottom navigation + the prominent "add transaction" button.
 class AppShell extends StatelessWidget {
@@ -49,11 +50,26 @@ class AppShell extends StatelessWidget {
               tooltip: 'Add transaction',
             )
           : null,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: shell.currentIndex,
-        destinations: _destinations,
-        onDestinationSelected: (i) =>
-            shell.goBranch(i, initialLocation: i == shell.currentIndex),
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(
+              color: context.finance.cardShadow,
+              blurRadius: 30,
+              offset: const Offset(0, -6),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: NavigationBar(
+            selectedIndex: shell.currentIndex,
+            destinations: _destinations,
+            onDestinationSelected: (i) =>
+                shell.goBranch(i, initialLocation: i == shell.currentIndex),
+          ),
+        ),
       ),
     );
   }

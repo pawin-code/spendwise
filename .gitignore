@@ -57,3 +57,6 @@ google-services.json
 GoogleService-Info.plist
 service-account*.json
 *.p12
+
+# Design-review renders (regenerate with: flutter test tool/screenshots_test.dart --update-goldens)
+tool/shots/

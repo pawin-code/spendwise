@@ -58,8 +58,10 @@ Without `key.properties` the build is signed with the **debug key** and Play wil
   > SpendWise does not connect to your bank, does not read your SMS and does not sell data. Balances reflect what you record.
   > Optional SpendWise Pro (auto-renewing subscription, price shown in Google Play) adds custom report ranges, extra
   > themes and automatic recording of recurring items.
-- **Graphics:** 512×512 icon: `assets/store/icon-512.png`. Feature graphic (1024×500) and phone screenshots must be captured
-  from the real app (see §7) — screenshots are not fabricated in this repository.
+- **Graphics:** 512×512 icon: `assets/store/icon-512.png`. Feature graphic (1024×500): `assets/store/feature-graphic-1024x500.png`. Phone screenshots must be captured
+  from the real app on a device/emulator with the final design (Play wants ≤2:1 aspect ratio, e.g. pad a 1080×2400 capture to 1200×2400);
+  they are not shipped in this repository. `flutter test tool/screenshots_test.dart --update-goldens` renders quick design-review PNGs to `tool/shots/`
+  (test-mode renderer: no soft shadows — use device captures for the store).
 
 ## 4. Declarations (guidance — answer according to the final build)
 
